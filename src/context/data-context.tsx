@@ -14,8 +14,11 @@ interface DataContextType {
   customers: Customer[];
   sales: Sale[];
   addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => StockItem;
+  updateStockItem: (id: string, updatedItem: StockItem) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => Customer;
+  updateCustomer: (id: string, updatedCustomer: Customer) => void;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
+  updateSale: (id: string, updatedSale: Sale) => void;
   removeSale: (saleId: string, itemId: string, quantity: number) => void;
 }
 
@@ -36,6 +39,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return newStockItem;
   };
 
+  const updateStockItem = (id: string, updatedItem: StockItem) => {
+    setStockItems(prev => prev.map(item => (item.id === id ? updatedItem : item)));
+  };
+
   const addCustomer = (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => {
     const newCustomer: Customer = {
         ...customer,
@@ -47,6 +54,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return newCustomer;
   };
 
+  const updateCustomer = (id: string, updatedCustomer: Customer) => {
+    setCustomers(prev => prev.map(customer => (customer.id === id ? updatedCustomer : customer)));
+  };
+
   const addSale = (sale: Omit<Sale, 'id'| 'date'>) => {
     const newSale: Sale = {
         ...sale,
@@ -55,9 +66,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     setSales(prev => [newSale, ...prev]);
 
-    //
-    // Deduct stock
-    //
     setStockItems(prev => prev.map(item => 
         item.id === sale.itemId 
         ? { ...item, quantity: item.quantity - sale.quantity }
@@ -65,6 +73,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     ));
   };
   
+  const updateSale = (id: string, updatedSale: Sale) => {
+    const originalSale = sales.find(s => s.id === id);
+    if (!originalSale) return;
+
+    const quantityDifference = originalSale.quantity - updatedSale.quantity;
+
+    setSales(prev => prev.map(s => (s.id === id ? { ...s, ...updatedSale, total: (updatedSale.price * updatedSale.quantity) * (1 - updatedSale.discount / 100) } : s)));
+    
+    // Adjust stock
+    setStockItems(prev => prev.map(item => 
+      item.id === updatedSale.itemId
+      ? { ...item, quantity: item.quantity + quantityDifference }
+      : item
+    ));
+  };
+
   const removeSale = (saleId: string, itemId: string, quantity: number) => {
     // Remove the sale
     setSales(prev => prev.filter(s => s.id !== saleId));
@@ -76,9 +100,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     ));
   };
 
-
   return (
-    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, addCustomer, addSale, removeSale }}>
+    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, updateStockItem, addCustomer, updateCustomer, addSale, updateSale, removeSale }}>
       {children}
     </DataContext.Provider>
   );

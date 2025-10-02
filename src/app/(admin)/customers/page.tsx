@@ -32,13 +32,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDataContext } from "@/context/data-context"
 import { Customer } from "@/lib/types"
 import * as XLSX from "xlsx"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+
 
 export default function CustomersPage() {
-  const { customers, addCustomer } = useDataContext();
+  const { customers, addCustomer, updateCustomer } = useDataContext();
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [phone, setPhone] = React.useState("")
   const [address, setAddress] = React.useState("")
+
+  const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const handleAddCustomer = () => {
     if(!name || !email) {
@@ -73,6 +78,19 @@ export default function CustomersPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Customers Report");
     XLSX.writeFile(wb, "customers_report.xlsx");
+  };
+  
+  const openEditDialog = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = () => {
+    if (editingCustomer) {
+      updateCustomer(editingCustomer.id, editingCustomer);
+      setIsEditDialogOpen(false);
+      setEditingCustomer(null);
+    }
   };
 
   return (
@@ -143,7 +161,7 @@ export default function CustomersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditDialog(customer)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
                         <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -155,6 +173,38 @@ export default function CustomersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {editingCustomer && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Customer</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-customer-name" className="text-right">Name</Label>
+                        <Input id="edit-customer-name" value={editingCustomer.name} onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-customer-email" className="text-right">Email</Label>
+                        <Input id="edit-customer-email" value={editingCustomer.email} onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-customer-phone" className="text-right">Phone</Label>
+                        <Input id="edit-customer-phone" value={editingCustomer.phone} onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-customer-address" className="text-right">Address</Label>
+                        <Textarea id="edit-customer-address" value={editingCustomer.address} onChange={(e) => setEditingCustomer({...editingCustomer, address: e.target.value})} className="col-span-3" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUpdateCustomer}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

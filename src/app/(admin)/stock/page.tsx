@@ -31,9 +31,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useDataContext } from "@/context/data-context"
 import * as XLSX from "xlsx"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { StockItem } from "@/lib/types"
 
 export default function StockPage() {
-  const { stockItems, addStockItem } = useDataContext();
+  const { stockItems, addStockItem, updateStockItem } = useDataContext();
 
   const [itemName, setItemName] = React.useState("");
   const [category, setCategory] = React.useState("");
@@ -41,6 +43,9 @@ export default function StockPage() {
   const [costPrice, setCostPrice] = React.useState("");
   const [sellingPrice, setSellingPrice] = React.useState("");
   const [supplier, setSupplier] = React.useState("");
+
+  const [editingItem, setEditingItem] = React.useState<StockItem | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const handleAddItem = () => {
     if(!itemName || !category || !quantity || !costPrice || !sellingPrice || !supplier) {
@@ -81,6 +86,19 @@ export default function StockPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
     XLSX.writeFile(wb, "stock_report.xlsx");
+  };
+
+  const openEditDialog = (item: StockItem) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleUpdateItem = () => {
+    if (editingItem) {
+      updateStockItem(editingItem.id, editingItem);
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+    }
   };
 
   return (
@@ -175,7 +193,7 @@ export default function StockPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditDialog(item)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
                         <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -187,6 +205,46 @@ export default function StockPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      {editingItem && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Stock Item</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-item-name" className="text-right">Name</Label>
+                        <Input id="edit-item-name" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-category" className="text-right">Category</Label>
+                        <Input id="edit-category" value={editingItem.category} onChange={(e) => setEditingItem({...editingItem, category: e.target.value})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-quantity" className="text-right">Quantity</Label>
+                        <Input id="edit-quantity" type="number" value={editingItem.quantity} onChange={(e) => setEditingItem({...editing-Item, quantity: Number(e.target.value)})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-cost-price" className="text-right">Cost Price</Label>
+                        <Input id="edit-cost-price" type="number" value={editingItem.costPrice} onChange={(e) => setEditingItem({...editingItem, costPrice: Number(e.target.value)})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-selling-price" className="text-right">Selling Price</Label>
+                        <Input id="edit-selling-price" type="number" value={editingItem.sellingPrice} onChange={(e) => setEditingItem({...editingItem, sellingPrice: Number(e.target.value)})} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-supplier" className="text-right">Supplier</Label>
+                        <Input id="edit-supplier" value={editingItem.supplier} onChange={(e) => setEditingItem({...editingItem, supplier: e.target.value})} className="col-span-3" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUpdateItem}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

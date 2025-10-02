@@ -40,10 +40,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import * as XLSX from "xlsx"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Sale } from "@/lib/types"
 
 export default function SalesPage() {
-  const { sales, removeSale } = useDataContext();
+  const { sales, removeSale, updateSale } = useDataContext();
   const router = useRouter();
+
+  const [editingSale, setEditingSale] = React.useState<Sale | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const handleViewInvoice = (saleId: string) => {
     router.push(`/sales/${saleId}`);
@@ -65,6 +72,19 @@ export default function SalesPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
     XLSX.writeFile(wb, "sales_report.xlsx");
+  };
+  
+  const openEditDialog = (sale: Sale) => {
+    setEditingSale(sale);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateSale = () => {
+    if (editingSale) {
+      updateSale(editingSale.id, editingSale);
+      setIsEditDialogOpen(false);
+      setEditingSale(null);
+    }
   };
   
   return (
@@ -112,6 +132,9 @@ export default function SalesPage() {
                       <DropdownMenuItem onClick={() => handleViewInvoice(sale.id)}>
                         View Invoice
                       </DropdownMenuItem>
+                       <DropdownMenuItem onClick={() => openEditDialog(sale)}>
+                        Edit
+                      </DropdownMenuItem>
                        <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" className="w-full justify-start font-normal text-sm text-destructive hover:text-destructive p-2 h-auto">
@@ -142,6 +165,47 @@ export default function SalesPage() {
           </TableBody>
         </Table>
       </CardContent>
+      {editingSale && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Sale</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-sale-quantity" className="text-right">
+                  Quantity
+                </Label>
+                <Input
+                  id="edit-sale-quantity"
+                  type="number"
+                  value={editingSale.quantity}
+                  onChange={(e) => setEditingSale({ ...editingSale, quantity: Number(e.target.value) })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-sale-discount" className="text-right">
+                  Discount (%)
+                </Label>
+                <Input
+                  id="edit-sale-discount"
+                  type="number"
+                  value={editingSale.discount}
+                  onChange={(e) => setEditingSale({ ...editingSale, discount: Number(e.target.value) })}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateSale}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   )
 }
