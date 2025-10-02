@@ -195,11 +195,18 @@ export default function BillingPage() {
     doc.text(`Grand Total:`, 150, finalY + 24, { align: 'right' });
     doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
 
+    let notesY = finalY + 40;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("AB Infometics Welcomes you to visit Again", 105, notesY, { align: 'center' });
+    notesY += 5;
+
     if (notes) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.text("Notes:", 20, finalY + 40);
-      doc.text(notes, 20, finalY + 45, { maxWidth: 170 });
+      doc.text("Notes:", 20, notesY);
+      doc.text(notes, 20, notesY + 5, { maxWidth: 170 });
     }
 
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
@@ -402,3 +409,5 @@ export default function BillingPage() {
     </div>
   )
 }
+
+    
