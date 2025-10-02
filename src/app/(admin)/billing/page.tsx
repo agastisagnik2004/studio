@@ -231,10 +231,8 @@ export default function BillingPage() {
            <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="customer">Customer</Label>
+               <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => setIsAddCustomerOpen(true)}>Add New</Button>
               <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="link" size="sm" className="p-0 h-auto">Add New</Button>
-                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add New Customer</DialogTitle>
