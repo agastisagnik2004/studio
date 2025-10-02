@@ -37,11 +37,12 @@ export default function StockPage() {
   const [itemName, setItemName] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [quantity, setQuantity] = React.useState("");
-  const [price, setPrice] = React.useState("");
+  const [costPrice, setCostPrice] = React.useState("");
+  const [sellingPrice, setSellingPrice] = React.useState("");
   const [supplier, setSupplier] = React.useState("");
 
   const handleAddItem = () => {
-    if(!itemName || !category || !quantity || !price || !supplier) {
+    if(!itemName || !category || !quantity || !costPrice || !sellingPrice || !supplier) {
       alert("Please fill out all fields.");
       return;
     }
@@ -49,13 +50,15 @@ export default function StockPage() {
       name: itemName,
       category,
       quantity: Number(quantity),
-      price: Number(price),
+      costPrice: Number(costPrice),
+      sellingPrice: Number(sellingPrice),
       supplier,
     });
     setItemName("");
     setCategory("");
     setQuantity("");
-    setPrice("");
+    setCostPrice("");
+    setSellingPrice("");
     setSupplier("");
   };
 
@@ -68,7 +71,7 @@ export default function StockPage() {
               Add a new item to your inventory.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="item-name">Item Name</Label>
               <Input id="item-name" placeholder="e.g. Wireless Mouse" value={itemName} onChange={(e) => setItemName(e.target.value)} />
@@ -82,8 +85,12 @@ export default function StockPage() {
               <Input id="quantity" type="number" placeholder="e.g. 50" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price (₹)</Label>
-              <Input id="price" type="number" placeholder="e.g. 25.99" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <Label htmlFor="cost-price">Cost Price (₹)</Label>
+              <Input id="cost-price" type="number" placeholder="e.g. 18.00" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="selling-price">Selling Price (₹)</Label>
+              <Input id="selling-price" type="number" placeholder="e.g. 25.99" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
@@ -108,7 +115,8 @@ export default function StockPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Cost Price</TableHead>
+                <TableHead className="text-right">Selling Price</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -129,7 +137,8 @@ export default function StockPage() {
                       item.quantity
                     )}
                   </TableCell>
-                  <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{item.costPrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{item.sellingPrice.toFixed(2)}</TableCell>
                   <TableCell>{item.supplier}</TableCell>
                   <TableCell>
                     <DropdownMenu>

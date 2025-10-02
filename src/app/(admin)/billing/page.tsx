@@ -79,7 +79,7 @@ export default function BillingPage() {
 
   const handleAddItem = () => {
     if (selectedItem) {
-      const subtotal = selectedItem.price * quantity;
+      const subtotal = selectedItem.sellingPrice * quantity;
       const discountAmount = (subtotal * discount) / 100;
       const total = subtotal - discountAmount;
       
@@ -87,7 +87,7 @@ export default function BillingPage() {
         itemId: selectedItem.id,
         itemName: selectedItem.name,
         quantity,
-        price: selectedItem.price,
+        price: selectedItem.sellingPrice,
         discount,
         total,
       }
@@ -340,5 +340,3 @@ export default function BillingPage() {
     </div>
   )
 }
-
-    

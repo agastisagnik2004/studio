@@ -3,7 +3,8 @@ export type StockItem = {
   name: string;
   category: string;
   quantity: number;
-  price: number;
+  costPrice: number;
+  sellingPrice: number;
   supplier: string;
   addedDate: string;
 };
@@ -26,7 +27,7 @@ export type Sale = {
   customerName: string;
   customerAvatar: string;
   quantity: number;
-  price: number;
+  price: number; // This will be the selling price
   discount: number;
   total: number;
   date: string;
