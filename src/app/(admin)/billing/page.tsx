@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -73,6 +74,7 @@ export default function BillingPage() {
   const [newCustomerPhone, setNewCustomerPhone] = React.useState("");
   const [newCustomerAddress, setNewCustomerAddress] = React.useState("");
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
+  const [grandTotalDiscount, setGrandTotalDiscount] = React.useState<number>(0);
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const selectedItem = stockItems.find(i => i.id === selectedItemId);
@@ -104,11 +106,13 @@ export default function BillingPage() {
     setInvoiceItems(prev => prev.filter((_, i) => i !== index));
   }
 
-  const calculateGrandTotal = () => {
+  const calculateSubtotal = () => {
     return invoiceItems.reduce((acc, item) => acc + item.total, 0);
   };
-
-  const grandTotal = calculateGrandTotal();
+  
+  const subtotal = calculateSubtotal();
+  const grandTotalDiscountAmount = (subtotal * grandTotalDiscount) / 100;
+  const grandTotal = subtotal - grandTotalDiscountAmount;
 
   const handleGenerateInvoice = () => {
     if (!selectedCustomer || invoiceItems.length === 0) {
@@ -116,6 +120,8 @@ export default function BillingPage() {
       return;
     }
 
+    // Since sales are based on item-level totals, we create a sale record for each item.
+    // The grand total discount is a separate concept applied at the invoice level.
     invoiceItems.forEach(item => {
         addSale({
           itemId: item.itemId,
@@ -125,6 +131,7 @@ export default function BillingPage() {
           customerAvatar: selectedCustomer.avatar,
           quantity: item.quantity,
           price: item.price,
+          // The discount here is the item-level one
           discount: item.discount,
           total: item.total,
         })
@@ -148,23 +155,36 @@ export default function BillingPage() {
 
     doc.autoTable({
       startY: 80,
-      head: [['Item', 'Quantity', 'Price', 'Discount', 'Total']],
+      head: [['Item', 'Quantity', 'Price', 'Discount (%)', 'Total']],
       body: invoiceItems.map(item => [
         item.itemName,
         item.quantity,
         `₹${item.price.toFixed(2)}`,
-        `${item.discount}%`,
+        `${item.discount}`,
         `₹${item.total.toFixed(2)}`
       ]),
+      didDrawPage: (data) => {
+        // We will draw totals in the final hook
+      }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY;
+    let finalY = (doc as any).lastAutoTable.finalY;
+    
+    doc.setFontSize(12);
+    doc.text(`Subtotal:`, 150, finalY + 10, { align: 'right' });
+    doc.text(`₹${subtotal.toFixed(2)}`, 200, finalY + 10, { align: 'right' });
+
+    doc.text(`Discount (${grandTotalDiscount}%):`, 150, finalY + 17, { align: 'right' });
+    doc.text(`- ₹${grandTotalDiscountAmount.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
+    
     doc.setFont("helvetica", "bold");
-    doc.text(`Total: ₹${grandTotal.toFixed(2)}`, 14, finalY + 10);
+    doc.text(`Grand Total:`, 150, finalY + 24, { align: 'right' });
+    doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
 
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
     setInvoiceItems([]);
     setSelectedCustomerId("");
+    setGrandTotalDiscount(0);
   };
 
   const handleAddCustomer = () => {
@@ -277,7 +297,7 @@ export default function BillingPage() {
                   />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="discount">Discount (%)</Label>
+                  <Label htmlFor="discount">Item Discount (%)</Label>
                   <Input 
                     id="discount" 
                     type="number" 
@@ -322,21 +342,42 @@ export default function BillingPage() {
                 </Table>
              )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Add any notes for the invoice."
-            />
-          </div>
+           {invoiceItems.length > 0 && (
+            <div className="grid gap-4 grid-cols-2">
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                    id="notes"
+                    placeholder="Add any notes for the invoice."
+                    />
+                </div>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="grand-total-discount">Grand Total Discount (%)</Label>
+                        <Input 
+                            id="grand-total-discount" 
+                            type="number" 
+                            placeholder="e.g. 5" 
+                            value={grandTotalDiscount}
+                            onChange={(e) => setGrandTotalDiscount(Number(e.target.value) || 0)}
+                            min="0"
+                        />
+                    </div>
+                     <div className="text-right">
+                        <p className="text-muted-foreground">Subtotal: ₹{subtotal.toFixed(2)}</p>
+                        <p className="text-muted-foreground">Discount: -₹{grandTotalDiscountAmount.toFixed(2)}</p>
+                        <p className="text-xl font-bold">Grand Total: ₹{grandTotal.toFixed(2)}</p>
+                    </div>
+                </div>
+            </div>
+           )}
         </CardContent>
-        <CardFooter className="flex justify-between items-center">
-          <div>
-            <p className="text-lg font-bold">Grand Total: ₹{grandTotal.toFixed(2)}</p>
-          </div>
+        <CardFooter className="flex justify-end">
           <Button onClick={handleGenerateInvoice} disabled={invoiceItems.length === 0 || !selectedCustomerId}>Generate Invoice</Button>
         </CardFooter>
       </Card>
     </div>
   )
 }
+
+    
