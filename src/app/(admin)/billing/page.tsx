@@ -120,6 +120,15 @@ export default function BillingPage() {
       return;
     }
 
+    // Check for sufficient stock
+    for (const item of invoiceItems) {
+      const stockItem = stockItems.find(si => si.id === item.itemId);
+      if (!stockItem || stockItem.quantity < item.quantity) {
+        alert(`Insufficient Stock for ${item.itemName}, modify Sales.`);
+        return;
+      }
+    }
+
     // Since sales are based on item-level totals, we create a sale record for each item.
     // The grand total discount is a separate concept applied at the invoice level.
     invoiceItems.forEach(item => {
