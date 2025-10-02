@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -15,6 +16,7 @@ interface DataContextType {
   addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => StockItem;
   addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => Customer;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
+  removeSale: (saleId: string, itemId: string, quantity: number) => void;
 }
 
 const DataContext = React.createContext<DataContextType | undefined>(undefined);
@@ -62,10 +64,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         : item
     ));
   };
+  
+  const removeSale = (saleId: string, itemId: string, quantity: number) => {
+    // Remove the sale
+    setSales(prev => prev.filter(s => s.id !== saleId));
+    // Add stock back
+    setStockItems(prev => prev.map(item =>
+      item.id === itemId
+      ? { ...item, quantity: item.quantity + quantity }
+      : item
+    ));
+  };
 
 
   return (
-    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, addCustomer, addSale }}>
+    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, addCustomer, addSale, removeSale }}>
       {children}
     </DataContext.Provider>
   );

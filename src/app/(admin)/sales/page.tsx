@@ -1,6 +1,8 @@
+
 "use client"
 
 import * as React from "react"
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -26,10 +28,26 @@ import {
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { useDataContext } from "@/context/data-context"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function SalesPage() {
-  const { sales } = useDataContext()
+  const { sales, removeSale } = useDataContext();
+  const router = useRouter();
 
+  const handleViewInvoice = (saleId: string) => {
+    router.push(`/sales/${saleId}`);
+  }
+  
   return (
     <Card>
       <CardHeader>
@@ -72,8 +90,30 @@ export default function SalesPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Invoice</DropdownMenuItem>
-                      <DropdownMenuItem>Cancel/Refund</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewInvoice(sale.id)}>
+                        View Invoice
+                      </DropdownMenuItem>
+                       <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-start font-normal text-sm text-destructive hover:text-destructive p-2 h-auto">
+                            Cancel/Refund
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete the sale and refund the transaction. The stock will be returned to inventory.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => removeSale(sale.id, sale.itemId, sale.quantity)} className="bg-destructive hover:bg-destructive/90">
+                              Confirm Refund
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
