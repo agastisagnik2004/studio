@@ -14,11 +14,11 @@ interface DataContextType {
   customers: Customer[];
   sales: Sale[];
   addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => StockItem;
-  updateStockItem: (id: string, updatedItem: StockItem) => void;
+  updateStockItem: (id: string, updatedItem: Partial<StockItem>) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => Customer;
-  updateCustomer: (id: string, updatedCustomer: Customer) => void;
+  updateCustomer: (id: string, updatedCustomer: Partial<Customer>) => void;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
-  updateSale: (id: string, updatedSale: Sale) => void;
+  updateSale: (id: string, updatedSale: Partial<Sale>) => void;
   removeSale: (saleId: string, itemId: string, quantity: number) => void;
 }
 
@@ -39,8 +39,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return newStockItem;
   };
 
-  const updateStockItem = (id: string, updatedItem: StockItem) => {
-    setStockItems(prev => prev.map(item => (item.id === id ? updatedItem : item)));
+  const updateStockItem = (id: string, updatedItem: Partial<StockItem>) => {
+    setStockItems(prev => prev.map(item => (item.id === id ? { ...item, ...updatedItem } : item)));
   };
 
   const addCustomer = (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => {
@@ -54,8 +54,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return newCustomer;
   };
 
-  const updateCustomer = (id: string, updatedCustomer: Customer) => {
-    setCustomers(prev => prev.map(customer => (customer.id === id ? updatedCustomer : customer)));
+  const updateCustomer = (id: string, updatedCustomer: Partial<Customer>) => {
+    setCustomers(prev => prev.map(customer => (customer.id === id ? { ...customer, ...updatedCustomer } : customer)));
   };
 
   const addSale = (sale: Omit<Sale, 'id'| 'date'>) => {
@@ -73,20 +73,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     ));
   };
   
-  const updateSale = (id: string, updatedSale: Sale) => {
+  const updateSale = (id: string, updatedSale: Partial<Sale>) => {
     const originalSale = sales.find(s => s.id === id);
     if (!originalSale) return;
 
-    const quantityDifference = originalSale.quantity - updatedSale.quantity;
+    const finalUpdatedSale = { ...originalSale, ...updatedSale };
 
-    setSales(prev => prev.map(s => (s.id === id ? { ...s, ...updatedSale, total: (updatedSale.price * updatedSale.quantity) * (1 - updatedSale.discount / 100) } : s)));
+    // Use current values if not provided in updatedSale
+    const quantityDifference = originalSale.quantity - (finalUpdatedSale.quantity);
+    const itemPrice = stockItems.find(i => i.id === finalUpdatedSale.itemId)?.sellingPrice || originalSale.price;
+
+
+    setSales(prev => prev.map(s => (s.id === id ? { ...s, ...finalUpdatedSale, price: itemPrice, total: (itemPrice * finalUpdatedSale.quantity) * (1 - (finalUpdatedSale.discount || 0) / 100) } : s)));
     
     // Adjust stock
-    setStockItems(prev => prev.map(item => 
-      item.id === updatedSale.itemId
-      ? { ...item, quantity: item.quantity + quantityDifference }
-      : item
-    ));
+    if (updatedSale.itemId && originalSale.itemId !== updatedSale.itemId) {
+      // Item has changed, so we need to adjust stock for both old and new items
+      setStockItems(prev => prev.map(item => {
+        if (item.id === originalSale.itemId) {
+          return { ...item, quantity: item.quantity + originalSale.quantity }; // Return stock to old item
+        }
+        if (item.id === updatedSale.itemId) {
+          return { ...item, quantity: item.quantity - finalUpdatedSale.quantity }; // Decrease stock for new item
+        }
+        return item;
+      }));
+    } else {
+      // Item has not changed, just adjust quantity
+       setStockItems(prev => prev.map(item => 
+        item.id === finalUpdatedSale.itemId
+        ? { ...item, quantity: item.quantity + quantityDifference }
+        : item
+      ));
+    }
   };
 
   const removeSale = (saleId: string, itemId: string, quantity: number) => {

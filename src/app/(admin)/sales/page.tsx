@@ -46,7 +46,7 @@ import { Input } from "@/components/ui/input"
 import { Sale } from "@/lib/types"
 
 export default function SalesPage() {
-  const { sales, removeSale, updateSale } = useDataContext();
+  const { sales, removeSale, updateSale, customers, stockItems } = useDataContext();
   const router = useRouter();
 
   const [editingSale, setEditingSale] = React.useState<Sale | null>(null);
@@ -81,6 +81,19 @@ export default function SalesPage() {
 
   const handleUpdateSale = () => {
     if (editingSale) {
+      const customer = customers.find(c => c.id === editingSale.customerId);
+      const item = stockItems.find(i => i.id === editingSale.itemId);
+
+      if(customer) {
+        editingSale.customerName = customer.name;
+        editingSale.customerAvatar = customer.avatar;
+      }
+
+      if(item) {
+        editingSale.itemName = item.name;
+        editingSale.price = item.sellingPrice;
+      }
+
       updateSale(editingSale.id, editingSale);
       setIsEditDialogOpen(false);
       setEditingSale(null);
@@ -172,6 +185,32 @@ export default function SalesPage() {
               <DialogTitle>Edit Sale</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-sale-customer" className="text-right">
+                  Customer
+                </Label>
+                <select
+                  id="edit-sale-customer"
+                  value={editingSale.customerId}
+                  onChange={(e) => setEditingSale({ ...editingSale, customerId: e.target.value })}
+                  className="col-span-3"
+                >
+                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-sale-item" className="text-right">
+                  Item
+                </Label>
+                 <select
+                  id="edit-sale-item"
+                  value={editingSale.itemId}
+                  onChange={(e) => setEditingSale({ ...editingSale, itemId: e.target.value })}
+                  className="col-span-3"
+                >
+                  {stockItems.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                </select>
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-sale-quantity" className="text-right">
                   Quantity

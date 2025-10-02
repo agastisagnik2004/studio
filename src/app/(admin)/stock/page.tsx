@@ -223,7 +223,7 @@ export default function StockPage() {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="edit-quantity" className="text-right">Quantity</Label>
-                        <Input id="edit-quantity" type="number" value={editingItem.quantity} onChange={(e) => setEditingItem({...editing-Item, quantity: Number(e.target.value)})} className="col-span-3" />
+                        <Input id="edit-quantity" type="number" value={editingItem.quantity} onChange={(e) => setEditingItem({...editingItem, quantity: Number(e.target.value)})} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="edit-cost-price" className="text-right">Cost Price</Label>
