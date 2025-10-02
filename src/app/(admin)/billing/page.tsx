@@ -75,6 +75,7 @@ export default function BillingPage() {
   const [newCustomerAddress, setNewCustomerAddress] = React.useState("");
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
   const [grandTotalDiscount, setGrandTotalDiscount] = React.useState<number>(0);
+  const [notes, setNotes] = React.useState<string>("");
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const selectedItem = stockItems.find(i => i.id === selectedItemId);
@@ -82,7 +83,7 @@ export default function BillingPage() {
   const handleAddItem = () => {
     if (selectedItem) {
        if (quantity > selectedItem.quantity) {
-        alert("Insufficient Stock modify Sales");
+        alert("Insufficient Stock, modify Sales");
         return;
       }
       const subtotal = selectedItem.sellingPrice * quantity;
@@ -194,10 +195,18 @@ export default function BillingPage() {
     doc.text(`Grand Total:`, 150, finalY + 24, { align: 'right' });
     doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
 
+    if (notes) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Notes:", 20, finalY + 40);
+      doc.text(notes, 20, finalY + 45, { maxWidth: 170 });
+    }
+
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
     setInvoiceItems([]);
     setSelectedCustomerId("");
     setGrandTotalDiscount(0);
+    setNotes("");
   };
 
   const handleAddCustomer = () => {
@@ -361,6 +370,8 @@ export default function BillingPage() {
                     <Textarea
                     id="notes"
                     placeholder="Add any notes for the invoice."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                     />
                 </div>
                 <div className="space-y-4">
