@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import * as XLSX from "xlsx"
 
 export default function SalesPage() {
   const { sales, removeSale } = useDataContext();
@@ -47,6 +48,24 @@ export default function SalesPage() {
   const handleViewInvoice = (saleId: string) => {
     router.push(`/sales/${saleId}`);
   }
+
+  const handleExport = () => {
+    const dataToExport = sales.map(sale => ({
+      "ID": sale.id,
+      "Customer": sale.customerName,
+      "Item": sale.itemName,
+      "Quantity": sale.quantity,
+      "Price": `₹${sale.price.toFixed(2)}`,
+      "Discount": `${sale.discount}%`,
+      "Total": `₹${sale.total.toFixed(2)}`,
+      "Date": new Date(sale.date).toLocaleDateString(),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
+    XLSX.writeFile(wb, "sales_report.xlsx");
+  };
   
   return (
     <Card>
@@ -114,6 +133,7 @@ export default function SalesPage() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

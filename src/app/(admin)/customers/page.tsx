@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useDataContext } from "@/context/data-context"
 import { Customer } from "@/lib/types"
+import * as XLSX from "xlsx"
 
 export default function CustomersPage() {
   const { customers, addCustomer } = useDataContext();
@@ -57,6 +58,22 @@ export default function CustomersPage() {
     setPhone("")
     setAddress("")
   }
+
+  const handleExport = () => {
+    const dataToExport = customers.map(customer => ({
+      "ID": customer.id,
+      "Name": customer.name,
+      "Email": customer.email,
+      "Phone": customer.phone,
+      "Address": customer.address,
+      "Join Date": customer.joinDate
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Customers Report");
+    XLSX.writeFile(wb, "customers_report.xlsx");
+  };
 
   return (
     <div className="grid gap-4">
@@ -128,6 +145,7 @@ export default function CustomersPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

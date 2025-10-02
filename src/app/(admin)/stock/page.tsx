@@ -30,6 +30,7 @@ import { MoreHorizontal } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useDataContext } from "@/context/data-context"
+import * as XLSX from "xlsx"
 
 export default function StockPage() {
   const { stockItems, addStockItem } = useDataContext();
@@ -60,6 +61,26 @@ export default function StockPage() {
     setCostPrice("");
     setSellingPrice("");
     setSupplier("");
+  };
+
+  const handleExport = () => {
+    const dataToExport = stockItems.map(item => ({
+      "ID": item.id,
+      "Name": item.name,
+      "Category": item.category,
+      "Quantity": item.quantity,
+      "Cost Price": `₹${item.costPrice.toFixed(2)}`,
+      "Selling Price": `₹${item.sellingPrice.toFixed(2)}`,
+      "Supplier": item.supplier,
+      "Added Date": item.addedDate,
+      "Cost Value": `₹${(item.quantity * item.costPrice).toFixed(2)}`,
+      "Sell Value": `₹${(item.quantity * item.sellingPrice).toFixed(2)}`
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
+    XLSX.writeFile(wb, "stock_report.xlsx");
   };
 
   return (
@@ -117,6 +138,8 @@ export default function StockPage() {
                 <TableHead className="text-right">Quantity</TableHead>
                 <TableHead className="text-right">Cost Price</TableHead>
                 <TableHead className="text-right">Selling Price</TableHead>
+                <TableHead className="text-right">Cost Value</TableHead>
+                <TableHead className="text-right">Sell Value</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -139,6 +162,8 @@ export default function StockPage() {
                   </TableCell>
                   <TableCell className="text-right">₹{item.costPrice.toFixed(2)}</TableCell>
                   <TableCell className="text-right">₹{item.sellingPrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{(item.quantity * item.costPrice).toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{(item.quantity * item.sellingPrice).toFixed(2)}</TableCell>
                   <TableCell>{item.supplier}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -152,6 +177,7 @@ export default function StockPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
