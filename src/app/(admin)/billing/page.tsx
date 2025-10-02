@@ -81,6 +81,10 @@ export default function BillingPage() {
 
   const handleAddItem = () => {
     if (selectedItem) {
+       if (quantity > selectedItem.quantity) {
+        alert("Insufficient Stock modify Sales");
+        return;
+      }
       const subtotal = selectedItem.sellingPrice * quantity;
       const discountAmount = (subtotal * discount) / 100;
       const total = subtotal - discountAmount;
@@ -386,5 +390,3 @@ export default function BillingPage() {
     </div>
   )
 }
-
-    
