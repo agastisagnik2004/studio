@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -14,9 +13,11 @@ interface DataContextType {
   customers: Customer[];
   sales: Sale[];
   addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => StockItem;
-  updateStockItem: (id: string, updatedItem: Partial<StockItem>) => void;
+  updateStockItem: (id: string, updatedItem: Partial<Omit<StockItem, 'id'>>) => void;
+  removeStockItem: (id: string) => void;
   addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => Customer;
   updateCustomer: (id: string, updatedCustomer: Partial<Customer>) => void;
+  removeCustomer: (id: string) => void;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
   updateSale: (id: string, updatedSale: Partial<Sale>) => void;
   removeSale: (saleId: string, itemId: string, quantity: number) => void;
@@ -39,9 +40,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return newStockItem;
   };
 
-  const updateStockItem = (id: string, updatedItem: Partial<StockItem>) => {
+  const updateStockItem = (id: string, updatedItem: Partial<Omit<StockItem, 'id'>>) => {
     setStockItems(prev => prev.map(item => (item.id === id ? { ...item, ...updatedItem } : item)));
   };
+
+  const removeStockItem = (id: string) => {
+    // Also remove associated sales
+    const salesOfItem = sales.filter(sale => sale.itemId === id);
+    setSales(prev => prev.filter(sale => sale.itemId !== id));
+    setStockItems(prev => prev.filter(item => item.id !== id));
+  }
 
   const addCustomer = (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => {
     const newCustomer: Customer = {
@@ -57,6 +65,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const updateCustomer = (id: string, updatedCustomer: Partial<Customer>) => {
     setCustomers(prev => prev.map(customer => (customer.id === id ? { ...customer, ...updatedCustomer } : customer)));
   };
+
+  const removeCustomer = (id: string) => {
+    // Remove customer and their sales
+    setSales(prev => prev.filter(sale => sale.customerId !== id));
+    setCustomers(prev => prev.filter(customer => customer.id !== id));
+  }
 
   const addSale = (sale: Omit<Sale, 'id'| 'date'>) => {
     const newSale: Sale = {
@@ -120,7 +134,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, updateStockItem, addCustomer, updateCustomer, addSale, updateSale, removeSale }}>
+    <DataContext.Provider value={{ stockItems, customers, sales, addStockItem, updateStockItem, removeStockItem, addCustomer, updateCustomer, removeCustomer, addSale, updateSale, removeSale }}>
       {children}
     </DataContext.Provider>
   );

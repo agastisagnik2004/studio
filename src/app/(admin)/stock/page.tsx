@@ -33,9 +33,20 @@ import { useDataContext } from "@/context/data-context"
 import * as XLSX from "xlsx"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { StockItem } from "@/lib/types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function StockPage() {
-  const { stockItems, addStockItem, updateStockItem } = useDataContext();
+  const { stockItems, addStockItem, updateStockItem, removeStockItem } = useDataContext();
 
   const [itemName, setItemName] = React.useState("");
   const [category, setCategory] = React.useState("");
@@ -95,7 +106,12 @@ export default function StockPage() {
   
   const handleUpdateItem = () => {
     if (editingItem) {
-      updateStockItem(editingItem.id, editingItem);
+      updateStockItem(editingItem.id, {
+        ...editingItem,
+        quantity: Number(editingItem.quantity),
+        costPrice: Number(editingItem.costPrice),
+        sellingPrice: Number(editingItem.sellingPrice),
+      });
       setIsEditDialogOpen(false);
       setEditingItem(null);
     }
@@ -194,7 +210,27 @@ export default function StockPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => openEditDialog(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-start font-normal text-sm text-destructive hover:text-destructive p-2 h-auto">
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the stock item.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => removeStockItem(item.id)} className="bg-destructive hover:bg-destructive/90">
+                                Delete Item
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         <DropdownMenuItem onClick={handleExport}>Download Report</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -241,7 +277,7 @@ export default function StockPage() {
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                     <Button onClick={handleUpdateItem}>Save Changes</Button>
-                </DialogFooter>
+                </DialogFooter>.
             </DialogContent>
         </Dialog>
       )}
