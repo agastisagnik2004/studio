@@ -32,7 +32,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company-name">Company Name</Label>
-              <Input id="company-name" placeholder="StockPilot Inc." />
+              <Input id="company-name" placeholder="STOCK MAP Inc." />
             </div>
             <div className="space-y-2">
               <Label htmlFor="logo">Logo</Label>

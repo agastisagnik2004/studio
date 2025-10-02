@@ -42,7 +42,7 @@ export function MainNav() {
         <div className="flex items-center gap-2 p-2">
           <Mountain className="h-8 w-8 text-primary" />
           <h1 className="font-headline text-2xl font-bold text-sidebar-foreground">
-            StockPilot
+            STOCK MAP
           </h1>
         </div>
       </SidebarHeader>

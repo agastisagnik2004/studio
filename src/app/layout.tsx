@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'StockPilot Admin Panel',
+  title: 'STOCK MAP Admin Panel',
   description: 'Admin Panel for Stock Sell Management',
 };
 
