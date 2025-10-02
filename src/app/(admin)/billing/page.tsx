@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Trash } from "lucide-react"
+import { Plus, Trash, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -44,6 +44,8 @@ import { Customer, StockItem } from "@/lib/types"
 
 import jsPDF from "jspdf"
 import "jspdf-autotable"
+import { extractInvoiceData, ExtractInvoiceOutput } from "@/ai/flows/invoice-scanner"
+import { useToast } from "@/hooks/use-toast"
 
 declare module "jspdf" {
   interface jsPDF {
@@ -62,6 +64,7 @@ interface InvoiceItem {
 
 export default function BillingPage() {
   const { customers, stockItems, addSale, addCustomer } = useDataContext();
+  const { toast } = useToast();
   const [selectedCustomerId, setSelectedCustomerId] = React.useState<string>("");
   
   const [invoiceItems, setInvoiceItems] = React.useState<InvoiceItem[]>([]);
@@ -75,6 +78,9 @@ export default function BillingPage() {
   const [newCustomerAddress, setNewCustomerAddress] = React.useState("");
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
   const [grandTotalDiscount, setGrandTotalDiscount] = React.useState<number>(0);
+  
+  const [isScanning, setIsScanning] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const selectedItem = stockItems.find(i => i.id === selectedItemId);
@@ -222,8 +228,99 @@ export default function BillingPage() {
     setIsAddCustomerOpen(false);
   }
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    toast({ title: "Scanning Invoice...", description: "The AI is analyzing the uploaded image. Please wait." });
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const image_data_uri = e.target?.result as string;
+        const result = await extractInvoiceData({ image_data_uri });
+        
+        // Find or create customer
+        let cust = customers.find(c => c.name.toLowerCase() === result.customerName.toLowerCase() || c.email.toLowerCase() === result.customerEmail.toLowerCase());
+        if (!cust) {
+          cust = addCustomer({
+            name: result.customerName,
+            email: result.customerEmail,
+            phone: "", // Not extracted
+            address: "", // Not extracted
+          });
+        }
+        setSelectedCustomerId(cust.id);
+        
+        // Map extracted items
+        const newInvoiceItems: InvoiceItem[] = result.items.map(extractedItem => {
+            const stockItem = stockItems.find(si => si.name.toLowerCase() === extractedItem.itemName.toLowerCase());
+            const price = stockItem ? stockItem.sellingPrice : extractedItem.price;
+            const subtotal = price * extractedItem.quantity;
+            const discountAmount = (subtotal * extractedItem.discount) / 100;
+            const total = subtotal - discountAmount;
+            
+            return {
+                itemId: stockItem?.id || "unknown",
+                itemName: extractedItem.itemName,
+                quantity: extractedItem.quantity,
+                price: price,
+                discount: extractedItem.discount,
+                total: total,
+            }
+        });
+
+        setInvoiceItems(newInvoiceItems);
+        setGrandTotalDiscount(result.grandTotalDiscount);
+        
+        toast({ title: "Scan Complete", description: "Invoice data has been populated." });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Scan Failed", description: "Could not extract data from the invoice image." });
+    } finally {
+      setIsScanning(false);
+      // Reset file input
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Invoice Scanner</CardTitle>
+          <CardDescription>Upload an invoice image to automatically fill the details below.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-12 text-center">
+              <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Drag and drop an image or click to upload.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isScanning}
+              >
+                {isScanning ? 'Scanning...' : 'Upload Image'}
+              </Button>
+               <Input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={isScanning}
+              />
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Create Invoice</CardTitle>
@@ -390,3 +487,5 @@ export default function BillingPage() {
     </div>
   )
 }
+
+    
