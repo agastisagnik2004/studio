@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   Mountain,
+  FileText,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/stock', label: 'Stock', icon: Package },
   { href: '/sales', label: 'Sales', icon: ShoppingCart },
   { href: '/customers', label: 'Customers', icon: Users },
+  { href: '/billing', label: 'Billing', icon: FileText },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ];
 

@@ -54,7 +54,7 @@ export default function SalesPage() {
                   {sale.customerName}
                 </TableCell>
                 <TableCell>{sale.itemName}</TableCell>
-                <TableCell>${sale.total.toFixed(2)}</TableCell>
+                <TableCell>₹{sale.total.toFixed(2)}</TableCell>
                 <TableCell>
                   {new Date(sale.date).toLocaleDateString()}
                 </TableCell>
