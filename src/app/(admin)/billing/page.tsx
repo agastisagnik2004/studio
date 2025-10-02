@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { customers, stockItems } from "@/lib/data"
-import { Customer, StockItem } from "@/lib/types"
+import { useDataContext } from "@/context/data-context"
+import { Customer } from "@/lib/types"
 
 import jsPDF from "jspdf"
 import "jspdf-autotable"
@@ -33,6 +33,7 @@ declare module "jspdf" {
 }
 
 export default function BillingPage() {
+  const { customers, stockItems, addSale } = useDataContext();
   const [selectedCustomerId, setSelectedCustomerId] = React.useState<string>("");
   const [selectedItemId, setSelectedItemId] = React.useState<string>("");
   const [quantity, setQuantity] = React.useState<number>(1);
@@ -57,6 +58,18 @@ export default function BillingPage() {
       alert("Please select a customer and an item.");
       return;
     }
+
+    addSale({
+      itemId: selectedItem.id,
+      itemName: selectedItem.name,
+      customerId: selectedCustomer.id,
+      customerName: selectedCustomer.name,
+      customerAvatar: selectedCustomer.avatar,
+      quantity,
+      price: selectedItem.price,
+      discount,
+      total,
+    })
 
     const doc = new jsPDF();
 
@@ -138,6 +151,7 @@ export default function BillingPage() {
               placeholder="e.g. 1" 
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+              min="1"
             />
           </div>
            <div className="space-y-2">
@@ -148,6 +162,7 @@ export default function BillingPage() {
               placeholder="e.g. 10" 
               value={discount}
               onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+              min="0"
               />
           </div>
           <div className="md:col-span-2 space-y-2">

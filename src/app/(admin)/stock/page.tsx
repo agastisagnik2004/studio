@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import {
   Card,
   CardContent,
@@ -24,12 +27,38 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
-import { stockItems } from "@/lib/data"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
+import { useDataContext } from "@/context/data-context"
 
 export default function StockPage() {
+  const { stockItems, addStockItem } = useDataContext();
+
+  const [itemName, setItemName] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [quantity, setQuantity] = React.useState("");
+  const [price, setPrice] = React.useState("");
+  const [supplier, setSupplier] = React.useState("");
+
+  const handleAddItem = () => {
+    if(!itemName || !category || !quantity || !price || !supplier) {
+      alert("Please fill out all fields.");
+      return;
+    }
+    addStockItem({
+      name: itemName,
+      category,
+      quantity: Number(quantity),
+      price: Number(price),
+      supplier,
+    });
+    setItemName("");
+    setCategory("");
+    setQuantity("");
+    setPrice("");
+    setSupplier("");
+  };
+
   return (
     <div className="grid gap-4">
       <Card>
@@ -42,27 +71,27 @@ export default function StockPage() {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="item-name">Item Name</Label>
-              <Input id="item-name" placeholder="e.g. Wireless Mouse" />
+              <Input id="item-name" placeholder="e.g. Wireless Mouse" value={itemName} onChange={(e) => setItemName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input id="category" placeholder="e.g. Electronics" />
+              <Input id="category" placeholder="e.g. Electronics" value={category} onChange={(e) => setCategory(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" type="number" placeholder="e.g. 50" />
+              <Input id="quantity" type="number" placeholder="e.g. 50" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price (₹)</Label>
-              <Input id="price" type="number" placeholder="e.g. 25.99" />
+              <Input id="price" type="number" placeholder="e.g. 25.99" value={price} onChange={(e) => setPrice(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
-              <Input id="supplier" placeholder="e.g. TechGear Inc." />
+              <Input id="supplier" placeholder="e.g. TechGear Inc." value={supplier} onChange={(e) => setSupplier(e.target.value)} />
             </div>
           </CardContent>
           <CardFooter>
-            <Button>Add Item</Button>
+            <Button onClick={handleAddItem}>Add Item</Button>
           </CardFooter>
       </Card>
       <Card>

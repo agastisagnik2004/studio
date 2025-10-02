@@ -26,30 +26,31 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
-import { customers as initialCustomers } from "@/lib/data"
-import { Customer } from "@/lib/types"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useDataContext } from "@/context/data-context"
+import { Customer } from "@/lib/types"
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = React.useState<Customer[]>(initialCustomers)
+  const { customers, addCustomer } = useDataContext();
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [phone, setPhone] = React.useState("")
   const [address, setAddress] = React.useState("")
 
   const handleAddCustomer = () => {
-    const newCustomer: Customer = {
-      id: `CUS${String(customers.length + 1).padStart(3, '0')}`,
+    if(!name || !email) {
+        alert("Please enter name and email.");
+        return;
+    }
+    const newCustomer: Omit<Customer, 'id' | 'joinDate' | 'avatar'> = {
       name,
       email,
       phone,
       address,
-      joinDate: new Date().toISOString().split('T')[0],
-      avatar: `https://i.pravatar.cc/40?u=${Math.random()}`
     }
-    setCustomers([...customers, newCustomer])
+    addCustomer(newCustomer)
     // Reset form
     setName("")
     setEmail("")

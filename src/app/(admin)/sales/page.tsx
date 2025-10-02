@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import {
   Card,
   CardContent,
@@ -21,11 +24,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
-import { sales } from "@/lib/data"
+import { useDataContext } from "@/context/data-context"
 
 export default function SalesPage() {
+  const { sales } = useDataContext()
+
   return (
     <Card>
       <CardHeader>

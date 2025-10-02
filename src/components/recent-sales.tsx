@@ -1,11 +1,15 @@
+"use client"
+
+import * as React from "react"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-import { sales } from "@/lib/data"
+import { useDataContext } from "@/context/data-context"
 
 export function RecentSales() {
+  const { sales } = useDataContext()
   const recentSales = sales.slice(0, 5);
 
   return (

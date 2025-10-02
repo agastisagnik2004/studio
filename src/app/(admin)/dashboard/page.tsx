@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import {
   Card,
   CardContent,
@@ -9,14 +12,15 @@ import {
   Package,
   Users,
   CreditCard,
-  Activity,
   AlertTriangle,
 } from "lucide-react"
-import { stockItems, sales, customers } from "@/lib/data"
 import { Overview } from "@/components/overview"
 import { RecentSales } from "@/components/recent-sales"
+import { useDataContext } from "@/context/data-context"
 
 export default function DashboardPage() {
+  const { sales, stockItems, customers } = useDataContext()
+
   const totalSales = sales.reduce((acc, sale) => acc + sale.total, 0)
   const totalStock = stockItems.reduce((acc, item) => acc + item.quantity, 0)
   const lowStockCount = stockItems.filter(item => item.quantity < 10).length;
