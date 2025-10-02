@@ -20,6 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { useDataContext } from "@/context/data-context"
 import { Customer } from "@/lib/types"
 
@@ -33,11 +42,17 @@ declare module "jspdf" {
 }
 
 export default function BillingPage() {
-  const { customers, stockItems, addSale } = useDataContext();
+  const { customers, stockItems, addSale, addCustomer } = useDataContext();
   const [selectedCustomerId, setSelectedCustomerId] = React.useState<string>("");
   const [selectedItemId, setSelectedItemId] = React.useState<string>("");
   const [quantity, setQuantity] = React.useState<number>(1);
   const [discount, setDiscount] = React.useState<number>(0);
+
+  const [newCustomerName, setNewCustomerName] = React.useState("");
+  const [newCustomerEmail, setNewCustomerEmail] = React.useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = React.useState("");
+  const [newCustomerAddress, setNewCustomerAddress] = React.useState("");
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const selectedItem = stockItems.find(i => i.id === selectedItemId);
@@ -107,6 +122,28 @@ export default function BillingPage() {
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
   };
 
+  const handleAddCustomer = () => {
+    if(!newCustomerName || !newCustomerEmail) {
+        alert("Please enter name and email.");
+        return;
+    }
+    const newCustomer: Omit<Customer, 'id' | 'joinDate' | 'avatar'> = {
+      name: newCustomerName,
+      email: newCustomerEmail,
+      phone: newCustomerPhone,
+      address: newCustomerAddress,
+    }
+    const addedCustomer = addCustomer(newCustomer);
+    setSelectedCustomerId(addedCustomer.id);
+    
+    // Reset form and close dialog
+    setNewCustomerName("");
+    setNewCustomerEmail("");
+    setNewCustomerPhone("");
+    setNewCustomerAddress("");
+    setIsAddCustomerOpen(false);
+  }
+
   return (
     <div className="grid gap-6">
       <Card>
@@ -118,8 +155,44 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="customer">Customer</Label>
-            <Select onValueChange={setSelectedCustomerId}>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="customer">Customer</Label>
+              <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="link" size="sm" className="p-0 h-auto">Add New</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Customer</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="new-customer-name" className="text-right">Name</Label>
+                      <Input id="new-customer-name" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="new-customer-email" className="text-right">Email</Label>
+                      <Input id="new-customer-email" value={newCustomerEmail} onChange={(e) => setNewCustomerEmail(e.target.value)} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="new-customer-phone" className="text-right">Phone</Label>
+                      <Input id="new-customer-phone" value={newCustomerPhone} onChange={(e) => setNewCustomerPhone(e.target.value)} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="new-customer-address" className="text-right">Address</Label>
+                      <Textarea id="new-customer-address" value={newCustomerAddress} onChange={(e) => setNewCustomerAddress(e.target.value)} className="col-span-3" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleAddCustomer}>Add Customer</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
               <SelectTrigger id="customer">
                 <SelectValue placeholder="Select a customer" />
               </SelectTrigger>

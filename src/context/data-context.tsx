@@ -12,8 +12,8 @@ interface DataContextType {
   stockItems: StockItem[];
   customers: Customer[];
   sales: Sale[];
-  addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => void;
-  addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => void;
+  addStockItem: (item: Omit<StockItem, 'id' | 'addedDate'>) => StockItem;
+  addCustomer: (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => Customer;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
 }
 
@@ -31,6 +31,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       addedDate: new Date().toISOString().split('T')[0],
     };
     setStockItems(prev => [...prev, newStockItem]);
+    return newStockItem;
   };
 
   const addCustomer = (customer: Omit<Customer, 'id' | 'joinDate' | 'avatar'>) => {
@@ -41,6 +42,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         avatar: `https://i.pravatar.cc/40?u=${Math.random()}`
     };
     setCustomers(prev => [...prev, newCustomer]);
+    return newCustomer;
   };
 
   const addSale = (sale: Omit<Sale, 'id'| 'date'>) => {
