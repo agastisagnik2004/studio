@@ -25,10 +25,51 @@ interface DataContextType {
 
 const DataContext = React.createContext<DataContextType | undefined>(undefined);
 
+const safelyParseJSON = (item: string | null) => {
+  if (item) {
+    try {
+      return JSON.parse(item);
+    } catch (error) {
+      console.error("Failed to parse JSON from localStorage", error);
+      return null;
+    }
+  }
+  return null;
+};
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [stockItems, setStockItems] = React.useState<StockItem[]>(initialStockItems);
-  const [customers, setCustomers] = React.useState<Customer[]>(initialCustomers);
-  const [sales, setSales] = React.useState<Sale[]>(initialSales);
+  const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [sales, setSales] = React.useState<Sale[]>([]);
+
+  React.useEffect(() => {
+    const storedStockItems = safelyParseJSON(localStorage.getItem("stockItems")) || initialStockItems;
+    const storedCustomers = safelyParseJSON(localStorage.getItem("customers")) || initialCustomers;
+    const storedSales = safelyParseJSON(localStorage.getItem("sales")) || initialSales;
+    
+    setStockItems(storedStockItems);
+    setCustomers(storedCustomers);
+    setSales(storedSales);
+  }, []);
+
+  React.useEffect(() => {
+    if (stockItems.length > 0) {
+      localStorage.setItem("stockItems", JSON.stringify(stockItems));
+    }
+  }, [stockItems]);
+
+  React.useEffect(() => {
+    if (customers.length > 0) {
+      localStorage.setItem("customers", JSON.stringify(customers));
+    }
+  }, [customers]);
+
+  React.useEffect(() => {
+    if (sales.length > 0) {
+      localStorage.setItem("sales", JSON.stringify(sales));
+    }
+  }, [sales]);
+
 
   const addStockItem = (item: Omit<StockItem, 'id' | 'addedDate'>) => {
     const newStockItem: StockItem = {
