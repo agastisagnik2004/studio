@@ -291,21 +291,21 @@ export default function BillingPage() {
     doc.text(`₹${grandTotal.toFixed(2)}`, valueX, finalY + 3, { align: 'right' });
     
     // Notes and Footer
-    let notesY = pageHeight - 40;
+    let notesY = pageHeight - 50;
     if (notes) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
       doc.text("Notes:", margin, notesY - 5);
-      const splitNotes = doc.splitTextToSize(notes, pageWidth - margin * 2);
+      const splitNotes = doc.splitTextToSize(notes, pageWidth - margin * 2 - 20);
       doc.text(splitNotes, margin, notesY);
+      notesY += (splitNotes.length * 5) + 5; // Adjust Y for footer
     }
     
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
-    doc.text("BERA BASTRALAYA Welcomes you to visit Again", pageWidth / 2, pageHeight - 20, { align: 'center' });
-    doc.text("Thank you for your business!", pageWidth / 2, pageHeight - 15, { align: 'center' });
+    doc.text("THANK YOU. VISIT AGAIN", pageWidth / 2, pageHeight - 20, { align: 'center' });
 
 
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
@@ -514,3 +514,5 @@ export default function BillingPage() {
     </div>
   )
 }
+
+    
