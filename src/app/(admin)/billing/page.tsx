@@ -157,8 +157,6 @@ export default function BillingPage() {
       }
     }
 
-    // Since sales are based on item-level totals, we create a sale record for each item.
-    // The grand total discount is a separate concept applied at the invoice level.
     invoiceItems.forEach(item => {
         addSale({
           itemId: item.itemId,
@@ -168,7 +166,6 @@ export default function BillingPage() {
           customerAvatar: selectedCustomer.avatar,
           quantity: item.quantity,
           price: item.price,
-          // The discount here is the item-level one
           discount: item.discount,
           total: item.total,
         })
@@ -176,23 +173,55 @@ export default function BillingPage() {
 
 
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
 
+    // Header
+    doc.setFillColor(244, 244, 244); // Light Gray
+    doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("Invoice", 20, 20);
+    doc.setTextColor(50, 50, 50);
+    doc.text("INVOICE", pageWidth - margin, 20, { align: 'right' });
 
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Invoice #${new Date().getTime()}`, 20, 30);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 35);
-    
-    doc.text("Bill To:", 20, 50);
-    doc.text(selectedCustomer.name, 20, 55);
-    doc.text(selectedCustomer.address, 20, 60);
-    doc.text(selectedCustomer.email, 20, 65);
+    doc.setTextColor(100, 100, 100);
+    doc.text("STOCK MAP Inc.", margin, 12);
+    doc.text("123 Coding Lane, Dev City", margin, 17);
+    doc.text("contact@stockmap.com", margin, 22);
 
+    // Billing Info
+    const billToY = 45;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(50, 50, 50);
+    doc.text("Bill To:", margin, billToY);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(selectedCustomer.name, margin, billToY + 5);
+    doc.text(selectedCustomer.address, margin, billToY + 10);
+    doc.text(selectedCustomer.email, margin, billToY + 15);
+    doc.text(selectedCustomer.phone, margin, billToY + 20);
+
+    const invoiceDetailsY = 45;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(50, 50, 50);
+    doc.text("Invoice No:", pageWidth - margin - 40, invoiceDetailsY, { align: 'left'});
+    doc.text("Date:", pageWidth - margin - 40, invoiceDetailsY + 5, { align: 'left'});
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    const invoiceId = `#${new Date().getTime()}`;
+    doc.text(invoiceId, pageWidth - margin, invoiceDetailsY, { align: 'right'});
+    doc.text(new Date().toLocaleDateString(), pageWidth - margin, invoiceDetailsY + 5, { align: 'right'});
+    
+    // Items Table
     doc.autoTable({
-      startY: 80,
-      head: [['Item', 'Qty', 'Price', 'Discount', 'Taxable', 'CGST', 'SGST', 'Total']],
+      startY: billToY + 30,
+      head: [['Item Description', 'Qty', 'Price', 'Discount', 'Taxable Value', 'CGST', 'SGST', 'Total']],
       body: invoiceItems.map(item => [
         item.itemName,
         item.quantity,
@@ -203,43 +232,81 @@ export default function BillingPage() {
         `₹${item.sgst.toFixed(2)}`,
         `₹${item.total.toFixed(2)}`
       ]),
-      didDrawPage: (data) => {
-        // We will draw totals in the final hook
+      theme: 'grid',
+      headStyles: {
+        fillColor: [50, 50, 50],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'right' },
+        6: { halign: 'right' },
+        7: { halign: 'right' },
       }
     });
 
-    let finalY = (doc as any).lastAutoTable.finalY;
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
     
-    doc.setFontSize(12);
-    doc.text(`Subtotal:`, 150, finalY + 10, { align: 'right' });
-    doc.text(`₹${subtotal.toFixed(2)}`, 200, finalY + 10, { align: 'right' });
+    // Totals Section
+    const totalsX = pageWidth - margin - 60;
+    const valueX = pageWidth - margin;
 
-    doc.text(`CGST (${(GST_RATE / 2).toFixed(1)}%):`, 150, finalY + 17, { align: 'right' });
-    doc.text(`+ ₹${totalCGST.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
-    
-    doc.text(`SGST (${(GST_RATE / 2).toFixed(1)}%):`, 150, finalY + 24, { align: 'right' });
-    doc.text(`+ ₹${totalSGST.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
-
-    doc.text(`Discount (${grandTotalDiscount}%):`, 150, finalY + 31, { align: 'right' });
-    doc.text(`- ₹${grandTotalDiscountAmount.toFixed(2)}`, 200, finalY + 31, { align: 'right' });
-    
-    doc.setFont("helvetica", "bold");
-    doc.text(`Grand Total:`, 150, finalY + 38, { align: 'right' });
-    doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 38, { align: 'right' });
-
-    let notesY = finalY + 50;
-
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text("AB Infometics Welcomes you to visit Again", 105, notesY, { align: 'center' });
-    notesY += 5;
+    doc.setTextColor(100, 100, 100);
 
+    doc.text("Subtotal:", totalsX, finalY, { align: 'right' });
+    doc.text(`₹${subtotal.toFixed(2)}`, valueX, finalY, { align: 'right' });
+    finalY += 7;
+
+    doc.text(`CGST (${(GST_RATE / 2).toFixed(1)}%):`, totalsX, finalY, { align: 'right' });
+    doc.text(`+ ₹${totalCGST.toFixed(2)}`, valueX, finalY, { align: 'right' });
+    finalY += 7;
+
+    doc.text(`SGST (${(GST_RATE / 2).toFixed(1)}%):`, totalsX, finalY, { align: 'right' });
+    doc.text(`+ ₹${totalSGST.toFixed(2)}`, valueX, finalY, { align: 'right' });
+    finalY += 7;
+
+    if (grandTotalDiscount > 0) {
+      doc.text(`Discount (${grandTotalDiscount}%):`, totalsX, finalY, { align: 'right' });
+      doc.text(`- ₹${grandTotalDiscountAmount.toFixed(2)}`, valueX, finalY, { align: 'right' });
+      finalY += 7;
+    }
+
+    doc.setDrawColor(50,50,50);
+    doc.line(totalsX - 10, finalY - 3, valueX, finalY - 3);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(50, 50, 50);
+    doc.text("Grand Total:", totalsX, finalY + 3, { align: 'right' });
+    doc.text(`₹${grandTotal.toFixed(2)}`, valueX, finalY + 3, { align: 'right' });
+    
+    // Notes and Footer
+    let notesY = pageHeight - 40;
     if (notes) {
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text("Notes:", 20, notesY);
-      doc.text(notes, 20, notesY + 5, { maxWidth: 170 });
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Notes:", margin, notesY - 5);
+      const splitNotes = doc.splitTextToSize(notes, pageWidth - margin * 2);
+      doc.text(splitNotes, margin, notesY);
     }
+    
+    doc.setFont("helvetica", "bolditalic");
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text("AB Infometics Welcomes you to visit Again", pageWidth / 2, pageHeight - 20, { align: 'center' });
+    doc.text("Thank you for your business!", pageWidth / 2, pageHeight - 15, { align: 'center' });
+
 
     doc.save(`invoice-${selectedCustomer.id}-${new Date().getTime()}.pdf`);
     setInvoiceItems([]);
