@@ -188,9 +188,9 @@ export default function BillingPage() {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
-    doc.text("STOCK MAP Inc.", margin, 12);
-    doc.text("123 Coding Lane, Dev City", margin, 17);
-    doc.text("contact@stockmap.com", margin, 22);
+    doc.text("BERA BASTRALAYA", margin, 12);
+    doc.text("Nandigram Bazar, Purba Medinipur, West Bengal", margin, 17);
+    doc.text("PIN: 721631", margin, 22);
 
     // Billing Info
     const billToY = 45;
@@ -209,14 +209,14 @@ export default function BillingPage() {
     const invoiceDetailsY = 45;
     doc.setFont("helvetica", "bold");
     doc.setTextColor(50, 50, 50);
-    doc.text("Invoice No:", pageWidth - margin - 40, invoiceDetailsY, { align: 'left'});
-    doc.text("Date:", pageWidth - margin - 40, invoiceDetailsY + 5, { align: 'left'});
+    doc.text("Invoice No: ", pageWidth - margin - 40, invoiceDetailsY, { align: 'left'});
+    doc.text("Date: ", pageWidth - margin - 40, invoiceDetailsY + 5, { align: 'left'});
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
     const invoiceId = `#${new Date().getTime()}`;
-    doc.text(invoiceId, pageWidth - margin, invoiceDetailsY, { align: 'right'});
-    doc.text(new Date().toLocaleDateString(), pageWidth - margin, invoiceDetailsY + 5, { align: 'right'});
+    doc.text(invoiceId, pageWidth - margin - 15, invoiceDetailsY, { align: 'left'});
+    doc.text(new Date().toLocaleDateString(), pageWidth - margin - 15, invoiceDetailsY + 5, { align: 'left'});
     
     // Items Table
     doc.autoTable({
@@ -304,7 +304,7 @@ export default function BillingPage() {
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
-    doc.text("AB Infometics Welcomes you to visit Again", pageWidth / 2, pageHeight - 20, { align: 'center' });
+    doc.text("BERA BASTRALAYA Welcomes you to visit Again", pageWidth / 2, pageHeight - 20, { align: 'center' });
     doc.text("Thank you for your business!", pageWidth / 2, pageHeight - 15, { align: 'center' });
 
 
@@ -514,5 +514,3 @@ export default function BillingPage() {
     </div>
   )
 }
-
-    
