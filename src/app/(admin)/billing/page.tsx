@@ -207,16 +207,17 @@ export default function BillingPage() {
     doc.text(selectedCustomer.phone, margin, billToY + 20);
 
     const invoiceDetailsY = 45;
+    const invoiceDetailsX = pageWidth - margin - 50;
     doc.setFont("helvetica", "bold");
     doc.setTextColor(50, 50, 50);
-    doc.text("Invoice No:", pageWidth - margin - 40, invoiceDetailsY);
-    doc.text("Date:", pageWidth - margin - 40, invoiceDetailsY + 5);
+    doc.text("Invoice No:", invoiceDetailsX, invoiceDetailsY);
+    doc.text("Date:", invoiceDetailsX, invoiceDetailsY + 5);
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
     const invoiceId = `#${new Date().getTime()}`;
-    doc.text(invoiceId, pageWidth - margin - 15, invoiceDetailsY, { align: 'right'});
-    doc.text(new Date().toLocaleDateString(), pageWidth - margin - 15, invoiceDetailsY + 5, { align: 'right'});
+    doc.text(invoiceId, invoiceDetailsX + 25, invoiceDetailsY);
+    doc.text(new Date().toLocaleDateString(), invoiceDetailsX + 25, invoiceDetailsY + 5);
     
     // Items Table
     doc.autoTable({
