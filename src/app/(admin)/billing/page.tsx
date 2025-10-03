@@ -57,8 +57,13 @@ interface InvoiceItem {
   quantity: number;
   price: number;
   discount: number;
+  taxableValue: number;
+  cgst: number;
+  sgst: number;
   total: number;
 }
+
+const GST_RATE = 18; // 18% total GST
 
 export default function BillingPage() {
   const { customers, stockItems, addSale, addCustomer } = useDataContext();
@@ -88,7 +93,13 @@ export default function BillingPage() {
       }
       const subtotal = selectedItem.sellingPrice * quantity;
       const discountAmount = (subtotal * discount) / 100;
-      const total = subtotal - discountAmount;
+      const taxableValue = subtotal - discountAmount;
+
+      const cgstRate = GST_RATE / 2;
+      const sgstRate = GST_RATE / 2;
+      const cgstAmount = (taxableValue * cgstRate) / 100;
+      const sgstAmount = (taxableValue * sgstRate) / 100;
+      const total = taxableValue + cgstAmount + sgstAmount;
       
       const newItem: InvoiceItem = {
         itemId: selectedItem.id,
@@ -96,6 +107,9 @@ export default function BillingPage() {
         quantity,
         price: selectedItem.sellingPrice,
         discount,
+        taxableValue,
+        cgst: cgstAmount,
+        sgst: sgstAmount,
         total,
       }
       setInvoiceItems(prev => [...prev, newItem]);
@@ -112,12 +126,21 @@ export default function BillingPage() {
   }
 
   const calculateSubtotal = () => {
-    return invoiceItems.reduce((acc, item) => acc + item.total, 0);
+    return invoiceItems.reduce((acc, item) => acc + item.taxableValue, 0);
   };
+  const calculateTotalCGST = () => {
+      return invoiceItems.reduce((acc, item) => acc + item.cgst, 0);
+  }
+   const calculateTotalSGST = () => {
+      return invoiceItems.reduce((acc, item) => acc + item.sgst, 0);
+  }
   
   const subtotal = calculateSubtotal();
+  const totalCGST = calculateTotalCGST();
+  const totalSGST = calculateTotalSGST();
+
   const grandTotalDiscountAmount = (subtotal * grandTotalDiscount) / 100;
-  const grandTotal = subtotal - grandTotalDiscountAmount;
+  const grandTotal = subtotal + totalCGST + totalSGST - grandTotalDiscountAmount;
 
   const handleGenerateInvoice = () => {
     if (!selectedCustomer || invoiceItems.length === 0) {
@@ -169,12 +192,15 @@ export default function BillingPage() {
 
     doc.autoTable({
       startY: 80,
-      head: [['Item', 'Quantity', 'Price', 'Discount (%)', 'Total']],
+      head: [['Item', 'Qty', 'Price', 'Discount', 'Taxable', 'CGST', 'SGST', 'Total']],
       body: invoiceItems.map(item => [
         item.itemName,
         item.quantity,
         `₹${item.price.toFixed(2)}`,
-        `${item.discount}`,
+        `${item.discount}%`,
+        `₹${item.taxableValue.toFixed(2)}`,
+        `₹${item.cgst.toFixed(2)}`,
+        `₹${item.sgst.toFixed(2)}`,
         `₹${item.total.toFixed(2)}`
       ]),
       didDrawPage: (data) => {
@@ -188,14 +214,20 @@ export default function BillingPage() {
     doc.text(`Subtotal:`, 150, finalY + 10, { align: 'right' });
     doc.text(`₹${subtotal.toFixed(2)}`, 200, finalY + 10, { align: 'right' });
 
-    doc.text(`Discount (${grandTotalDiscount}%):`, 150, finalY + 17, { align: 'right' });
-    doc.text(`- ₹${grandTotalDiscountAmount.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
+    doc.text(`CGST (${(GST_RATE / 2).toFixed(1)}%):`, 150, finalY + 17, { align: 'right' });
+    doc.text(`+ ₹${totalCGST.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
+    
+    doc.text(`SGST (${(GST_RATE / 2).toFixed(1)}%):`, 150, finalY + 24, { align: 'right' });
+    doc.text(`+ ₹${totalSGST.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
+
+    doc.text(`Discount (${grandTotalDiscount}%):`, 150, finalY + 31, { align: 'right' });
+    doc.text(`- ₹${grandTotalDiscountAmount.toFixed(2)}`, 200, finalY + 31, { align: 'right' });
     
     doc.setFont("helvetica", "bold");
-    doc.text(`Grand Total:`, 150, finalY + 24, { align: 'right' });
-    doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 24, { align: 'right' });
+    doc.text(`Grand Total:`, 150, finalY + 38, { align: 'right' });
+    doc.text(`₹${grandTotal.toFixed(2)}`, 200, finalY + 38, { align: 'right' });
 
-    let notesY = finalY + 40;
+    let notesY = finalY + 50;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -245,7 +277,7 @@ export default function BillingPage() {
         <CardHeader>
           <CardTitle className="font-headline">Create Invoice</CardTitle>
           <CardDescription>
-            Generate a new invoice for a customer.
+            Generate a new invoice for a customer with GST.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
@@ -347,6 +379,8 @@ export default function BillingPage() {
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-right">Discount</TableHead>
+                      <TableHead className="text-right">CGST</TableHead>
+                      <TableHead className="text-right">SGST</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead><span className="sr-only">Remove</span></TableHead>
                     </TableRow>
@@ -358,7 +392,9 @@ export default function BillingPage() {
                             <TableCell className="text-right">{item.quantity}</TableCell>
                             <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
                             <TableCell className="text-right">{item.discount}%</TableCell>
-                            <TableCell className="text-right">₹{item.total.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">₹{item.cgst.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">₹{item.sgst.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-medium">₹{item.total.toFixed(2)}</TableCell>
                             <TableCell className="text-right">
                                 <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
                                     <Trash className="h-4 w-4" />
@@ -393,8 +429,10 @@ export default function BillingPage() {
                             min="0"
                         />
                     </div>
-                     <div className="text-right">
+                     <div className="text-right space-y-1">
                         <p className="text-muted-foreground">Subtotal: ₹{subtotal.toFixed(2)}</p>
+                        <p className="text-muted-foreground">CGST ({(GST_RATE / 2).toFixed(1)}%): +₹{totalCGST.toFixed(2)}</p>
+                        <p className="text-muted-foreground">SGST ({(GST_RATE / 2).toFixed(1)}%): +₹{totalSGST.toFixed(2)}</p>
                         <p className="text-muted-foreground">Discount: -₹{grandTotalDiscountAmount.toFixed(2)}</p>
                         <p className="text-xl font-bold">Grand Total: ₹{grandTotal.toFixed(2)}</p>
                     </div>
