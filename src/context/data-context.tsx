@@ -41,6 +41,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [sales, setSales] = React.useState<Sale[]>([]);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
     const storedStockItems = safelyParseJSON(localStorage.getItem("stockItems")) || initialStockItems;
@@ -50,25 +51,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setStockItems(storedStockItems);
     setCustomers(storedCustomers);
     setSales(storedSales);
+    setIsLoaded(true);
   }, []);
 
   React.useEffect(() => {
-    if (stockItems.length > 0) {
+    if (isLoaded) {
       localStorage.setItem("stockItems", JSON.stringify(stockItems));
     }
-  }, [stockItems]);
+  }, [stockItems, isLoaded]);
 
   React.useEffect(() => {
-    if (customers.length > 0) {
+    if (isLoaded) {
       localStorage.setItem("customers", JSON.stringify(customers));
     }
-  }, [customers]);
+  }, [customers, isLoaded]);
 
   React.useEffect(() => {
-    if (sales.length > 0) {
+    if (isLoaded) {
       localStorage.setItem("sales", JSON.stringify(sales));
     }
-  }, [sales]);
+  }, [sales, isLoaded]);
 
 
   const addStockItem = (item: Omit<StockItem, 'id' | 'addedDate'>) => {
